@@ -431,7 +431,7 @@ const LEAVE_TYPES = {
 // ═══════════════════════════════════════════
 //  CONFIG — ضع رابط Apps Script بعد النشر
 // ═══════════════════════════════════════════
-const SCRIPT_URL = 'https://script.google.com/a/macros/pt.cu.edu.eg/s/AKfycbw1JNrMMMY6_8iMdyhYKeyJd0KIXm3csFtbTugktSOrOHCatPPSbgi5qq2gqivDx2w/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxfU_SKpqX6jpDjLqnCuW6iyiSqi1-DIo33mcyPvZ52_64PVQAfaRU4ZuSPp2Hv-YSW/exec';
 let REQUESTS = [];
 
 let currentUser = null;
@@ -855,13 +855,11 @@ function showOv(msg){ document.getElementById('overlayMsg').textContent=msg||'ج
 function hideOv(){ document.getElementById('overlay').classList.remove('show'); }
 async function callScript(params){
   if(DEMO_MODE) return demoHandler(params);
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('timeout')), 30000);
-    google.script.run
-      .withSuccessHandler(data => { clearTimeout(timeout); resolve(data); })
-      .withFailureHandler(err  => { clearTimeout(timeout); reject(err); })
-      .processRequest(JSON.stringify(params));
-  });
+  const url = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
+  const res = await fetch(url, {redirect:'follow'});
+  const text = await res.text();
+  try { return JSON.parse(text); }
+  catch(e) { throw new Error('خطأ في الاستجابة'); }
 }
 
 function demoHandler(p){
