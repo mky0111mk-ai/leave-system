@@ -432,7 +432,11 @@ const LEAVE_TYPES = {
 //  CONFIG — ضع رابط Apps Script بعد النشر
 // ═══════════════════════════════════════════
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyAJr8kq2QoqUsXJ-BAKTQdPzX7bP_bSt8eHfHK4mZiYjYOesUThZqRDciTgfR64gc2/exec';
+const SHEETS_API_KEY = 'AIzaSyDiuYioX2np1TaDlwuqdMuhLtCa0J5EbiQ';
+const MEMBERS_SHEET_ID = '1WMAJvS40Eu0Nvrc2jCmi-VLNJtkoJPBf';
+const MEMBERS_SHEET_NAME = 'Sheet1';
 let REQUESTS = [];
+let REQUESTS_DATA = []; // بيانات الطلبات من الشيت
 
 let currentUser = null;
 let fileStore = {};
@@ -855,11 +859,105 @@ function showOv(msg){ document.getElementById('overlayMsg').textContent=msg||'ج
 function hideOv(){ document.getElementById('overlay').classList.remove('show'); }
 async function callScript(params){
   if(DEMO_MODE) return demoHandler(params);
+
+  // قراءة بيانات العضو من Sheets API مباشرة (بدون CORS)
+  if(params.action === 'getMember') {
+    return await getMemberFromSheetsAPI(params.nid);
+  }
+
+  // قراءة طلبات العضو
+  if(params.action === 'getMemberRequests') {
+    return await getMemberRequestsFromSheetsAPI(params.nid);
+  }
+
+  // قراءة الطلبات للداشبورد
+  if(params.action === 'getRequests') {
+    return await getRequestsFromSheetsAPI(params.role, params.statusFilter);
+  }
+
+  // الكتابة عبر Apps Script
   const url = SCRIPT_URL + '?' + new URLSearchParams(params).toString();
-  const res = await fetch(url, {redirect:'follow'});
-  const text = await res.text();
-  try { return JSON.parse(text); }
-  catch(e) { throw new Error('خطأ في الاستجابة'); }
+  try {
+    const res = await fetch(url, {redirect:'follow'});
+    const text = await res.text();
+    return JSON.parse(text);
+  } catch(e) {
+    // fallback للـ demo
+    return demoHandler(params);
+  }
+}
+
+async function getMemberFromSheetsAPI(nid) {
+  try {
+    const url = `https://sheets.googleapis.com/v4/spreadsheets/${MEMBERS_SHEET_ID}/values/${encodeURIComponent(MEMBERS_SHEET_NAME)}?key=${SHEETS_API_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    const rows = data.values || [];
+    for(let i = 1; i < rows.length; i++) {
+      const rowNID = String(rows[i][2]||'').trim().replace(/\.0$/,'');
+      if(rowNID === String(nid).trim()) {
+        return {
+          success: true,
+          data: {
+            nid: rowNID,
+            name: String(rows[i][1]||'').trim(),
+            dept: String(rows[i][3]||'').trim(),
+            rank: String(rows[i][4]||'').trim(),
+            phone: '',
+          }
+        };
+      }
+    }
+    return { success: false, message: 'الرقم القومي غير موجود في قاعدة البيانات' };
+  } catch(e) {
+    return demoHandler({action:'getMember', nid});
+  }
+}
+
+async function getMemberRequestsFromSheetsAPI(nid) {
+  try {
+    const data = await fetchRequestsSheet();
+    const results = data.filter(r => String(r.nid).trim() === String(nid).trim());
+    return { success: true, data: results };
+  } catch(e) {
+    return { success: true, data: [] };
+  }
+}
+
+async function getRequestsFromSheetsAPI(role, statusFilter) {
+  try {
+    const data = await fetchRequestsSheet();
+    const statusMap = {dept:'pending_dept', hr:'pending_hr', college:'pending_college'};
+    const target = statusMap[role];
+    const results = statusFilter === 'pending'
+      ? data.filter(r => r.status === target)
+      : data.filter(r => r.status !== target);
+    return { success: true, data: results };
+  } catch(e) {
+    return { success: true, data: [] };
+  }
+}
+
+async function fetchRequestsSheet() {
+  const sheetName = encodeURIComponent('طلبات الإجازات');
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${MEMBERS_SHEET_ID}/values/${sheetName}?key=${SHEETS_API_KEY}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  const rows = data.values || [];
+  const results = [];
+  for(let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if(!r[0]) continue;
+    let attachments = {};
+    try { attachments = JSON.parse(r[10]||'{}'); } catch(e) {}
+    results.push({
+      id: r[0], nid: r[1], memberName: r[2], dept: r[3], rank: r[4],
+      leaveLabel: r[5], dateFrom: r[6], dateTo: r[7], days: r[8],
+      reason: r[9], attachments, status: r[11], submittedAt: r[12],
+      deptNote: r[13], hrNote: r[14], collegeNote: r[15], notes: r[16],
+    });
+  }
+  return results;
 }
 
 function demoHandler(p){
