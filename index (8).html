@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>نظام الإجازات الخاصة — كلية العلاج الطبيعي</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;900&display=swap');
+:root {
+  --navy:#0D2340; --gold:#C9A44E; --gold-lt:#F5EAC8; --cream:#FAF8F4;
+  --white:#FFF; --gray:#6B7280; --border:#E2DDD5;
+  --green:#166534; --green-b:#DCFCE7; --red:#991B1B; --red-b:#FEE2E2;
+  --blue:#1E40AF; --blue-b:#DBEAFE; --amber:#92400E; --amber-b:#FEF3C7;
+  --purple:#5B21B6; --purple-b:#EDE9FE;
+  --shadow:0 2px 16px rgba(13,35,64,.09);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Cairo',sans-serif;background:var(--cream);color:var(--navy);min-height:100vh}
+
+.demo-bar{background:var(--gold-lt);border-bottom:2px solid var(--gold);padding:8px 20px;font-size:13px;font-weight:600;color:var(--amber);display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.demo-bar select{width:auto;padding:4px 10px;font-size:13px;border:1px solid var(--gold);border-radius:6px;font-family:'Cairo',sans-serif;background:var(--white)}
+
+header{background:var(--navy);padding:16px 28px;display:flex;align-items:center;gap:16px;border-bottom:3px solid var(--gold)}
+.logo{width:50px;height:50px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:900;color:var(--navy);flex-shrink:0}
+header h1{color:#fff;font-size:17px;font-weight:700;line-height:1.3}
+header p{color:var(--gold-lt);font-size:12px;margin-top:2px}
+
+.container{max-width:880px;margin:0 auto;padding:32px 18px 60px}
+.screen{display:none}.screen.active{display:block}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(13,35,64,.6);z-index:999;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+.overlay.show{display:flex}
+.spinner{width:38px;height:38px;border:3px solid rgba(255,255,255,.3);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+.overlay p{color:#fff;font-weight:600;font-size:15px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.card{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:26px;margin-bottom:22px;box-shadow:var(--shadow)}
+.card-title{font-size:15px;font-weight:700;border-bottom:2px solid var(--gold-lt);padding-bottom:11px;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+
+.login-wrap{max-width:440px;margin:28px auto}
+.login-ico{font-size:52px;text-align:center;margin-bottom:14px}
+.login-wrap h2{font-size:21px;font-weight:700;margin-bottom:6px;text-align:center}
+.login-wrap .sub{color:var(--gray);font-size:14px;margin-bottom:26px;text-align:center}
+
+.field{margin-bottom:18px}
+label{display:block;font-size:13.5px;font-weight:600;margin-bottom:6px}
+input,select,textarea{width:100%;padding:10px 13px;border:1.5px solid var(--border);border-radius:9px;font-family:'Cairo',sans-serif;font-size:14.5px;color:var(--navy);background:var(--white);direction:rtl;transition:border-color .2s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,164,78,.14)}
+input:disabled,select:disabled,textarea:disabled{background:#F3F4F6;color:var(--gray);cursor:not-allowed}
+textarea{resize:vertical;min-height:85px}
+.req{color:#DC2626}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.grid2{grid-template-columns:1fr}}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 24px;border-radius:9px;font-family:'Cairo',sans-serif;font-size:14px;font-weight:600;cursor:pointer;border:none;transition:all .2s}
+.btn-gold{background:var(--gold);color:var(--navy)}.btn-gold:hover{background:#b8922f}
+.btn-navy{background:var(--navy);color:#fff}.btn-navy:hover{background:#1a3a5c}
+.btn-outline{background:transparent;color:var(--navy);border:1.5px solid var(--border)}.btn-outline:hover{border-color:var(--gold);background:#fefbf4}
+.btn-green{background:var(--green);color:#fff}.btn-red{background:var(--red);color:#fff}
+.btn-full{width:100%}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-sm{padding:7px 14px;font-size:13px;border-radius:7px}
+
+.alert{padding:11px 14px;border-radius:9px;font-size:13.5px;margin-bottom:16px;display:flex;align-items:flex-start;gap:9px}
+.alert-info{background:var(--blue-b);color:var(--blue);border:1px solid #BFDBFE}
+.alert-success{background:var(--green-b);color:var(--green);border:1px solid #A7F3D0}
+.alert-error{background:var(--red-b);color:var(--red);border:1px solid #FECACA}
+.alert-warn{background:var(--amber-b);color:var(--amber);border:1px solid #FDE68A}
+.alert-purple{background:var(--purple-b);color:var(--purple);border:1px solid #C4B5FD}
+
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 11px;border-radius:20px;font-size:12px;font-weight:600}
+.b-pending{background:var(--amber-b);color:var(--amber)}
+.b-dept{background:var(--blue-b);color:var(--blue)}
+.b-hr{background:var(--purple-b);color:var(--purple)}
+.b-college{background:#FEF9C3;color:#713F12}
+.b-approved{background:var(--green-b);color:var(--green)}
+.b-rejected{background:var(--red-b);color:var(--red)}
+
+.mbar{background:var(--navy);border-radius:13px;padding:16px 22px;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.mbar-info{display:flex;align-items:center;gap:14px}
+.avatar{width:46px;height:46px;background:var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;color:var(--navy);flex-shrink:0}
+.mbar-name{color:#fff;font-size:15px;font-weight:700}
+.mbar-dept{color:var(--gold-lt);font-size:12.5px;margin-top:2px}
+.mbar .btn-outline{color:var(--gold-lt);border-color:rgba(255,255,255,.25);font-size:13px;padding:7px 14px}
+
+.tabs{display:flex;gap:3px;border-bottom:2px solid var(--border);margin-bottom:22px;flex-wrap:wrap}
+.tab{padding:9px 16px;font-size:13.5px;font-weight:600;cursor:pointer;border:none;background:none;color:var(--gray);font-family:'Cairo',sans-serif;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab.active{color:var(--navy);border-bottom-color:var(--gold)}
+
+/* LEGAL DECLARATION */
+.legal-box{border:2px solid var(--gold);border-radius:10px;padding:16px 18px;margin:20px 0;background:#FFFDF5}
+.legal-box .legal-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.legal-text{font-size:13px;line-height:1.9;color:#374151;margin-bottom:14px;text-align:justify}
+.legal-check{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
+.legal-check input[type=checkbox]{width:18px;height:18px;margin-top:2px;flex-shrink:0;cursor:pointer;accent-color:var(--gold)}
+.legal-check span{font-size:13.5px;font-weight:600;line-height:1.6;color:var(--navy)}
+
+/* FILE UPLOAD */
+.file-item{border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;background:var(--white)}
+.file-item-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+.file-label{font-size:13.5px;font-weight:600;line-height:1.4}
+.file-req-tag{font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;white-space:nowrap}
+.tag-req{background:var(--red-b);color:var(--red)}
+.tag-opt{background:#F3F4F6;color:var(--gray)}
+.file-drop{border:2px dashed var(--border);border-radius:8px;padding:18px;text-align:center;cursor:pointer;transition:all .2s;background:var(--cream)}
+.file-drop:hover,.file-drop.dragover{border-color:var(--gold);background:var(--gold-lt)}
+.file-drop input[type=file]{display:none}
+.file-drop .drop-ico{font-size:26px;margin-bottom:4px}
+.file-drop p{font-size:12.5px;color:var(--gray);margin-top:3px}
+.file-preview{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--green-b);border-radius:8px;margin-top:8px}
+.file-preview .fname{font-size:13px;font-weight:600;color:var(--green);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.file-preview .fsize{font-size:11px;color:var(--gray)}
+.rmv-btn{background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;padding:0;line-height:1}
+
+/* NOTES BOX — visible to member */
+.notes-box{border-right:4px solid var(--gold);background:var(--amber-b);border-radius:0 9px 9px 0;padding:13px 16px;margin:14px 0}
+.notes-box .notes-title{font-size:13px;font-weight:700;color:var(--amber);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.notes-box .notes-text{font-size:13.5px;color:#78350F;line-height:1.7}
+
+/* TIMELINE */
+.timeline{display:flex;margin:20px 0}
+.tl-step{flex:1;text-align:center;position:relative;padding-top:36px}
+.tl-step::before{content:'';position:absolute;top:14px;right:50%;left:0;height:2px;background:var(--border)}
+.tl-step:first-child::before{display:none}
+.tl-step.done::before,.tl-step.active::before{background:var(--gold)}
+.tl-dot{width:28px;height:28px;border-radius:50%;background:var(--border);color:var(--gray);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;position:absolute;top:0;left:50%;transform:translateX(-50%);z-index:1;border:2px solid var(--white)}
+.tl-step.done .tl-dot{background:var(--gold);color:var(--navy)}
+.tl-step.active .tl-dot{background:var(--navy);color:#fff;border-color:var(--gold)}
+.tl-label{font-size:11px;font-weight:600;color:var(--gray);margin-top:4px}
+.tl-step.done .tl-label{color:var(--gold)}
+.tl-step.active .tl-label{color:var(--navy);font-weight:700}
+
+/* REQUEST CARDS */
+.req-card{border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:12px;background:var(--white);transition:box-shadow .2s}
+.req-card:hover{box-shadow:var(--shadow)}
+.req-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+.req-name{font-size:14.5px;font-weight:700}
+.req-meta{font-size:12.5px;color:var(--gray);margin-bottom:3px}
+.req-reason{font-size:13px;color:#374151;background:var(--cream);border-radius:7px;padding:8px 12px;margin:10px 0}
+.req-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.attach-link{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border-radius:6px;background:var(--blue-b);color:var(--blue);text-decoration:none;font-weight:600}
+.attach-link:hover{background:#BFDBFE}
+.attach-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+
+/* NOTE TEXTAREA in dashboard */
+.note-input{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'Cairo',sans-serif;font-size:13.5px;margin-top:10px;direction:rtl;resize:vertical;min-height:70px}
+.note-input:focus{outline:none;border-color:var(--gold)}
+
+/* HISTORY TABLE */
+.htable{width:100%;border-collapse:collapse;font-size:13px}
+.htable th{background:var(--cream);padding:9px 13px;text-align:right;font-weight:700;border-bottom:2px solid var(--border)}
+.htable td{padding:10px 13px;border-bottom:1px solid var(--border);color:#374151;vertical-align:middle}
+.htable tr:hover td{background:#FAFAF8}
+
+.empty{text-align:center;padding:44px 20px;color:var(--gray)}
+.empty .ico{font-size:42px;margin-bottom:10px}
+hr.div{border:none;border-top:1px solid var(--border);margin:22px 0}
+
+.success-ico{font-size:54px;text-align:center;margin-bottom:12px;animation:pop .4s ease}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.1)}100%{transform:scale(1)}}
+
+.pill-count{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--gold);color:var(--navy);font-size:11px;font-weight:700;margin-right:4px}
+</style>
+</head>
+<body>
+
+
+
+<header>
+  <div class="logo">ع</div>
+  <div>
+    <h1>نظام طلبات الإجازات الخاصة</h1>
+    <p>كلية العلاج الطبيعي — جامعة القاهرة</p>
+  </div>
+</header>
+
+<div class="overlay" id="overlay">
+  <div class="spinner"></div>
+  <p id="overlayMsg">جاري التحميل...</p>
+</div>
+
+<!-- ══════════ LOGIN ══════════ -->
+<div class="screen active" id="screen-login">
+  <div class="container">
+    <div class="card login-wrap">
+      <div class="login-ico">🔐</div>
+      <h2>تسجيل الدخول</h2>
+
+      <!-- TABS -->
+      <div style="display:flex;border:1.5px solid var(--border);border-radius:9px;overflow:hidden;margin-bottom:22px">
+        <button id="tab-member" onclick="switchLoginTab('member')" style="flex:1;padding:10px;font-family:Cairo,sans-serif;font-size:13.5px;font-weight:600;border:none;cursor:pointer;background:var(--navy);color:#fff">عضو / رئيس قسم</button>
+        <button id="tab-admin" onclick="switchLoginTab('admin')" style="flex:1;padding:10px;font-family:Cairo,sans-serif;font-size:13.5px;font-weight:600;border:none;cursor:pointer;background:var(--cream);color:var(--gray)">HR / العميد</button>
+      </div>
+
+      <!-- MEMBER LOGIN -->
+      <div id="loginPanelMember">
+        <p class="sub" style="margin-bottom:16px">أدخل رقمك القومي</p>
+        <div class="field">
+          <label>الرقم القومي</label>
+          <input type="text" id="loginNID" placeholder="14 رقماً" maxlength="14" inputmode="numeric"/>
+        </div>
+      </div>
+
+      <!-- ADMIN LOGIN -->
+      <div id="loginPanelAdmin" style="display:none">
+        <p class="sub" style="margin-bottom:16px">أدخل بيانات الدخول</p>
+        <div class="field">
+          <label>اسم المستخدم</label>
+          <input type="text" id="loginUser" placeholder="hr أو dean"/>
+        </div>
+        <div class="field">
+          <label>كلمة المرور</label>
+          <input type="password" id="loginPass" placeholder="••••••••"/>
+        </div>
+      </div>
+
+      <div class="alert alert-error" id="loginErr" style="display:none">
+        <span>⚠️</span><span id="loginErrMsg"></span>
+      </div>
+      <button class="btn btn-gold btn-full" onclick="doLogin()">دخول ←</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ MEMBER ══════════ -->
+<div class="screen" id="screen-member">
+  <div class="container">
+    <div class="mbar">
+      <div class="mbar-info">
+        <div class="avatar" id="mAvatar">م</div>
+        <div>
+          <div class="mbar-name" id="mName">—</div>
+          <div class="mbar-dept" id="mDept">—</div>
+        </div>
+      </div>
+      <button class="btn btn-outline" onclick="logout()">تسجيل الخروج</button>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="memberTab('new',this)">➕ طلب جديد</button>
+      <button class="tab" onclick="memberTab('history',this)">📋 طلباتي</button>
+    </div>
+
+    <!-- NEW REQUEST -->
+    <div id="mtab-new">
+      <div class="card">
+        <div class="card-title">📝 بيانات الإجازة الخاصة</div>
+
+        <!-- بيانات العضو (readonly) -->
+        <div class="grid2">
+          <div class="field"><label>الاسم الكامل</label><input id="f_name" disabled/></div>
+          <div class="field"><label>القسم</label><input id="f_dept" disabled/></div>
+          <div class="field"><label>الدرجة الوظيفية</label><input id="f_rank" disabled/></div>
+          <div class="field"><label>رقم الهاتف</label><input id="f_phone" disabled/></div>
+        </div>
+
+        <hr class="div">
+
+        <div class="field">
+          <label>نوع الإجازة <span class="req">*</span></label>
+          <select id="f_type" onchange="onTypeChange()">
+            <option value="">— اختر نوع الإجازة —</option>
+            <option value="umrah">إجازة العمرة والحج</option>
+            <option value="maternity">إجازة الوضع</option>
+            <option value="childcare">إجازة رعاية الطفل</option>
+            <option value="familycare">إجازة رعاية الأسرة</option>
+            <option value="accompany">إجازة مرافقة الزوج/الزوجة</option>
+          </select>
+        </div>
+
+        <div id="typeDesc" style="display:none" class="alert alert-info">
+          <span>ℹ️</span><span id="typeDescText"></span>
+        </div>
+
+        <div class="grid2">
+          <div class="field"><label>من تاريخ <span class="req">*</span></label><input type="date" id="f_from" onchange="calcDays()"/></div>
+          <div class="field"><label>إلى تاريخ <span class="req">*</span></label><input type="date" id="f_to" onchange="calcDays()"/></div>
+        </div>
+        <div id="daysRow" style="display:none" class="field">
+          <label>عدد الأيام</label>
+          <input id="f_days" disabled style="font-weight:700"/>
+        </div>
+
+        <div class="field">
+          <label>السبب <span class="req">*</span></label>
+          <textarea id="f_reason" placeholder="اكتب سبباً واضحاً..."></textarea>
+        </div>
+
+        <!-- ATTACHMENTS -->
+        <div id="attachSection" style="display:none">
+          <hr class="div">
+          <div class="card-title" style="margin-bottom:14px">📎 المرفقات المطلوبة</div>
+          <div id="attachList"></div>
+        </div>
+
+        <hr class="div">
+
+        <!-- LEGAL DECLARATION -->
+        <div class="legal-box">
+          <div class="legal-title">⚖️ إقرار قانوني — يجب القراءة والموافقة</div>
+          <div class="legal-text">
+            أنا الموقّع أدناه، عضو هيئة التدريس بكلية العلاج الطبيعي — جامعة القاهرة، أُقرّ وأتعهد بما يلي:<br><br>
+            ١. أن جميع البيانات والمعلومات الواردة في هذا الطلب صحيحة ودقيقة، وأنني أتحمل المسؤولية القانونية الكاملة عن أي بيانات مغلوطة أو مضللة.<br><br>
+            ٢. أن جميع المستندات والمرفقات المُقدَّمة مع هذا الطلب أصلية وصحيحة، وأن تقديم أي مستندات مزوّرة أو منتهية الصلاحية يُعرّضني للمساءلة القانونية والتأديبية وفقاً للوائح جامعة القاهرة والقانون المصري.<br><br>
+            ٣. أنني مُلتزم بإخطار الكلية فور أي تغيير في الظروف التي بُنيَ عليها هذا الطلب.<br><br>
+            ٤. أنني اطّلعت على اللوائح المنظِّمة لهذا النوع من الإجازات وأوافق على الخضوع لها كاملةً.
+          </div>
+          <label class="legal-check">
+            <input type="checkbox" id="legalCheck" onchange="checkLegal()"/>
+            <span>أقرّ بصحة جميع ما ورد أعلاه، وأتحمل المسؤولية القانونية الكاملة عن صحة البيانات والمستندات المرفقة.</span>
+          </label>
+        </div>
+
+        <div class="alert alert-error" id="submitErr" style="display:none"><span>⚠️</span><span id="submitErrMsg"></span></div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px">
+          <button class="btn btn-outline" onclick="resetForm()">إعادة تعيين</button>
+          <button class="btn btn-gold" id="submitBtn" onclick="submitLeave()" disabled>إرسال الطلب ←</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- HISTORY -->
+    <div id="mtab-history" style="display:none">
+      <div class="card">
+        <div class="card-title">📋 سجل طلباتي</div>
+        <div id="historyContent"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ SUCCESS ══════════ -->
+<div class="screen" id="screen-success">
+  <div class="container">
+    <div class="card" style="max-width:520px;margin:0 auto;text-align:center">
+      <div class="success-ico">✅</div>
+      <h2 style="font-size:20px;font-weight:700;margin-bottom:8px">تم إرسال الطلب بنجاح</h2>
+      <p style="color:var(--gray);font-size:14px;margin-bottom:20px">سيتم مراجعته من رئيس القسم أولاً</p>
+      <div class="timeline">
+        <div class="tl-step done"><div class="tl-dot">✓</div><div class="tl-label">تقديم</div></div>
+        <div class="tl-step active"><div class="tl-dot">2</div><div class="tl-label">رئيس القسم</div></div>
+        <div class="tl-step"><div class="tl-dot">3</div><div class="tl-label">الموارد البشرية</div></div>
+        <div class="tl-step"><div class="tl-dot">4</div><div class="tl-label">العميد</div></div>
+        <div class="tl-step"><div class="tl-dot">✓</div><div class="tl-label">اعتماد نهائي</div></div>
+      </div>
+      <div class="alert alert-success" style="text-align:right;margin-top:16px">
+        <span>🔖</span><span>رقم الطلب: <strong id="refNo">—</strong></span>
+      </div>
+      <button class="btn btn-navy btn-full" onclick="goHistory()">عرض طلباتي ←</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DEPT HEAD ══════════ -->
+<div class="screen" id="screen-dept">
+  <div class="container">
+    <div class="mbar">
+      <div class="mbar-info">
+        <div class="avatar">ر</div>
+        <div><div class="mbar-name">رئيس القسم</div><div class="mbar-dept">لوحة مراجعة الطلبات — المرحلة الأولى</div></div>
+      </div>
+      <button class="btn btn-outline" onclick="logout()">خروج</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="dTab('p',this)">⏳ بانتظار موافقتي <span id="dPC" class="pill-count">0</span></button>
+      <button class="tab" onclick="dTab('d',this)">📁 سبق مراجعتها</button>
+    </div>
+    <div id="dt-p"><div id="dPL"></div></div>
+    <div id="dt-d" style="display:none"><div id="dDL"></div></div>
+  </div>
+</div>
+
+<!-- ══════════ HR ══════════ -->
+<div class="screen" id="screen-hr">
+  <div class="container">
+    <div class="mbar">
+      <div class="mbar-info">
+        <div class="avatar" style="background:#C4B5FD;color:var(--purple)">م</div>
+        <div><div class="mbar-name">الموارد البشرية</div><div class="mbar-dept">لوحة المراجعة — المرحلة الثانية</div></div>
+      </div>
+      <button class="btn btn-outline" onclick="logout()">خروج</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="hTab('p',this)">⏳ بانتظار المراجعة <span id="hPC" class="pill-count">0</span></button>
+      <button class="tab" onclick="hTab('d',this)">📁 سبق مراجعتها</button>
+    </div>
+    <div id="ht-p"><div id="hPL"></div></div>
+    <div id="ht-d" style="display:none"><div id="hDL"></div></div>
+  </div>
+</div>
+
+<!-- ══════════ COLLEGE / DEAN ══════════ -->
+<div class="screen" id="screen-college">
+  <div class="container">
+    <div class="mbar">
+      <div class="mbar-info">
+        <div class="avatar" style="background:#FCD34D;color:#78350F">ع</div>
+        <div><div class="mbar-name">عميد الكلية</div><div class="mbar-dept">الاعتماد النهائي للإجازات — المرحلة الثالثة</div></div>
+      </div>
+      <button class="btn btn-outline" onclick="logout()">خروج</button>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="cTab('p',this)">⏳ تحتاج اعتماد العميد <span id="cPC" class="pill-count">0</span></button>
+      <button class="tab" onclick="cTab('d',this)">📁 مكتملة</button>
+    </div>
+    <div id="ct-p"><div id="cPL"></div></div>
+    <div id="ct-d" style="display:none"><div id="cDL"></div></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════
+const CFG = {
+  SCRIPT_URL: 'YOUR_APPS_SCRIPT_URL',
+  DRIVE_FOLDER: 'YOUR_DRIVE_FOLDER_ID',
+};
+
+// ═══════════════════════════════════════════
+//  LEAVE TYPES
+// ═══════════════════════════════════════════
+const LEAVE_TYPES = {
+  umrah:      { label:'إجازة العمرة والحج',         desc:'بعد موافقة رئيس القسم تُرفع للموارد البشرية ثم العميد ثم رئيس الجامعة.', attachments:[{id:'visa',label:'تأشيرة العمرة أو الحج',req:true},{id:'req_letter',label:'طلب موجه لرئيس القسم',req:true}] },
+  maternity:  { label:'إجازة الوضع',               desc:'القرار التنفيذي يصدر بعد موافقة العميد مباشرة.', attachments:[{id:'birth_cert',label:'شهادة ميلاد المولود',req:true},{id:'req_letter',label:'طلب موجه لرئيس القسم',req:true}] },
+  childcare:  { label:'إجازة رعاية الطفل',          desc:'الحد الأقصى 6 سنوات متتابعة أو متفرقة. للمرة الأولى يُرفق إخلاء طرف وإقرار عدم سفر.', attachments:[{id:'birth_cert',label:'شهادة ميلاد الطفل',req:true},{id:'req_letter',label:'طلب موجه لرئيس القسم',req:true},{id:'clearance',label:'إخلاء طرف FOPT-HR-F0113 (للمرة الأولى)',req:false},{id:'no_travel',label:'إقرار عدم السفر FOPT-HR-F0114 (للمرة الأولى)',req:false}] },
+  familycare: { label:'إجازة رعاية الأسرة',         desc:'تحتاج موافقة مجلس القسم ثم مجلس الكلية ثم رئيس الجامعة. للهيئة المعاونة حتى سنة كاملة.', attachments:[{id:'med_report',label:'التقرير الطبي المعتمد من جهة حكومية',req:true},{id:'patient_id',label:'صورة الرقم القومي للوالد/الوالدة',req:true},{id:'birth_cert',label:'شهادة ميلاد مقدم الطلب (لرعاية الوالدة)',req:false},{id:'req_letter',label:'طلب موجه لرئيس القسم',req:true},{id:'pg_letter',label:'مراسلة الدراسات العليا (للهيئة المعاونة فقط)',req:false}] },
+  accompany:  { label:'إجازة مرافقة الزوج/الزوجة', desc:'تُرسل الأوراق + أصول خلال شهر. تحتاج مجلس القسم ← العميد ← رئيس الجامعة.', attachments:[{id:'marriage',label:'قسيمة الزواج',req:true},{id:'passport',label:'جواز سفر ساري (زوج وزوجة)',req:true},{id:'residence',label:'إقامة سارية (زوج وزوجة)',req:true},{id:'contract',label:'عقد عمل موثق أو إفادة جهة العمل',req:true},{id:'req_letter',label:'طلب موجه لرئيس القسم',req:true},{id:'dual_nat',label:'إفادة الجنسية المزدوجة (إن وجدت)',req:false}] },
+};
+
+// ═══════════════════════════════════════════
+//  CONFIG — ضع رابط Apps Script بعد النشر
+// ═══════════════════════════════════════════
+const SCRIPT_URL = 'https://script.google.com/a/macros/pt.cu.edu.eg/s/AKfycbw1JNrMMMY6_8iMdyhYKeyJd0KIXm3csFtbTugktSOrOHCatPPSbgi5qq2gqivDx2w/exec';
+let REQUESTS = [];
+
+let currentUser = null;
+let fileStore = {};
+
+// ═══════════════════════════════════════════
+//  SCREENS & ROLES
+// ═══════════════════════════════════════════
+function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById('screen-'+id).classList.add('active'); }
+
+
+
+function logout(silent){
+  currentUser=null; fileStore={};
+  if(!silent){ show('login'); document.getElementById('loginNID').value=''; document.getElementById('loginUser').value=''; document.getElementById('loginPass').value=''; document.getElementById('loginErr').style.display='none'; switchLoginTab('member'); }
+}
+
+// ═══════════════════════════════════════════
+//  LOGIN
+// ═══════════════════════════════════════════
+let loginTab = 'member';
+
+function switchLoginTab(tab){
+  loginTab = tab;
+  document.getElementById('loginPanelMember').style.display = tab==='member' ? '' : 'none';
+  document.getElementById('loginPanelAdmin').style.display  = tab==='admin'  ? '' : 'none';
+  document.getElementById('tab-member').style.background = tab==='member' ? 'var(--navy)' : 'var(--cream)';
+  document.getElementById('tab-member').style.color      = tab==='member' ? '#fff' : 'var(--gray)';
+  document.getElementById('tab-admin').style.background  = tab==='admin'  ? 'var(--navy)' : 'var(--cream)';
+  document.getElementById('tab-admin').style.color       = tab==='admin'  ? '#fff' : 'var(--gray)';
+  document.getElementById('loginErr').style.display='none';
+}
+
+// بيانات الدخول الإدارية — غيّرها بعد النشر
+const ADMIN_CREDS = {
+  'hr':   { pass:'hr2024',   role:'hr',      name:'الموارد البشرية' },
+  'dean': { pass:'dean2024', role:'college', name:'عميد الكلية'     },
+};
+
+async function doLogin(){
+  document.getElementById('loginErr').style.display='none';
+
+  if(loginTab === 'admin'){
+    const user = document.getElementById('loginUser').value.trim().toLowerCase();
+    const pass = document.getElementById('loginPass').value;
+    const cred = ADMIN_CREDS[user];
+    if(!cred || cred.pass !== pass){ showLE('اسم المستخدم أو كلمة المرور غير صحيحة'); return; }
+    currentUser = { name: cred.name, role: cred.role };
+    if(cred.role === 'hr')      { show('hr');      loadHR(); }
+    else if(cred.role==='college'){ show('college'); loadCollege(); }
+    return;
+  }
+
+  // Member / Dept Head login by NID
+  const nid=document.getElementById('loginNID').value.trim();
+  if(!/^\d{14}$/.test(nid)){ showLE('الرقم القومي يجب أن يكون 14 رقماً'); return; }
+  showOv('جاري التحقق من بياناتك...');
+  try {
+    const res=await callScript({action:'getMember', nid});
+    if(res.success){
+      const role = res.data.rank && res.data.rank.includes('رئيس قسم') ? 'dept' : 'member';
+      currentUser={...res.data, role};
+      if(role==='dept'){ show('dept'); loadDept(); }
+      else { loadMember(); }
+    } else { showLE(res.message||'الرقم القومي غير موجود في قاعدة البيانات'); }
+  } catch(e){
+    // لو فشل الاتصال جرب DEMO data
+    const demo = DEMO_MEMBERS[nid];
+    if(demo){
+      const role = demo.rank && demo.rank.includes('رئيس قسم') ? 'dept' : 'member';
+      currentUser={nid,...demo, role};
+      if(role==='dept'){ show('dept'); loadDept(); }
+      else { loadMember(); }
+    } else {
+      showLE('تعذر الاتصال بالخادم — تأكد من الرقم القومي');
+    }
+  }
+  finally { hideOv(); }
+}
+function showLE(msg){ document.getElementById('loginErrMsg').textContent=msg; document.getElementById('loginErr').style.display='flex'; }
+document.addEventListener('keydown',e=>{ if(e.key==='Enter'&&document.getElementById('screen-login').classList.contains('active')) doLogin(); });
+
+// ═══════════════════════════════════════════
+//  MEMBER
+// ═══════════════════════════════════════════
+function loadMember(){
+  const u=currentUser;
+  const initials=u.name.replace(/[أاد\.]/g,'').trim()[0]||'م';
+  document.getElementById('mAvatar').textContent=initials;
+  document.getElementById('mName').textContent=u.name;
+  document.getElementById('mDept').textContent=u.dept;
+  document.getElementById('f_name').value=u.name;
+  document.getElementById('f_dept').value=u.dept;
+  document.getElementById('f_rank').value=u.rank;
+  document.getElementById('f_phone').value=u.phone;
+  show('member'); loadHistory();
+}
+
+function memberTab(tab,btn){
+  ['new','history'].forEach(t=>document.getElementById('mtab-'+t).style.display=t===tab?'':'none');
+  document.querySelectorAll('#screen-member .tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(tab==='history') loadHistory();
+}
+
+function checkLegal(){
+  document.getElementById('submitBtn').disabled=!document.getElementById('legalCheck').checked;
+}
+
+function onTypeChange(){
+  const type=document.getElementById('f_type').value;
+  const sec=document.getElementById('attachSection');
+  const desc=document.getElementById('typeDesc');
+  fileStore={};
+  if(!type){ sec.style.display='none'; desc.style.display='none'; return; }
+  const cfg=LEAVE_TYPES[type];
+  document.getElementById('typeDescText').textContent=cfg.desc;
+  desc.style.display='flex'; sec.style.display='';
+  buildAttachments(cfg.attachments);
+}
+
+function buildAttachments(atts){
+  const list=document.getElementById('attachList');
+  list.innerHTML='';
+  atts.forEach(att=>{
+    const div=document.createElement('div');
+    div.className='file-item';
+    div.innerHTML=`
+      <div class="file-item-header">
+        <div class="file-label">${att.label}</div>
+        <span class="file-req-tag ${att.req?'tag-req':'tag-opt'}">${att.req?'إلزامي':'اختياري'}</span>
+      </div>
+      <div class="file-drop" id="drop_${att.id}">
+        <input type="file" id="fi_${att.id}" accept="image/*,.pdf" onchange="handleFile(this,'${att.id}')">
+        <div class="drop-ico">📄</div>
+        <strong style="font-size:13px">اسحب الملف هنا أو اضغط للاختيار</strong>
+        <p>صورة أو PDF — حد أقصى 10 ميجابايت</p>
+      </div>
+      <div class="file-preview" id="prev_${att.id}" style="display:none">
+        <span>📎</span>
+        <span class="fname" id="fn_${att.id}">—</span>
+        <span class="fsize" id="fs_${att.id}"></span>
+        <button class="rmv-btn" onclick="removeFile('${att.id}')">✕</button>
+      </div>`;
+    list.appendChild(div);
+    const drop=div.querySelector('.file-drop');
+    drop.addEventListener('click',()=>document.getElementById('fi_'+att.id).click());
+    drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('dragover')});
+    drop.addEventListener('dragleave',()=>drop.classList.remove('dragover'));
+    drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('dragover');if(e.dataTransfer.files[0])setFile(att.id,e.dataTransfer.files[0])});
+  });
+}
+
+function handleFile(input,id){ if(input.files[0]) setFile(id,input.files[0]); }
+function setFile(id,file){
+  if(file.size>10*1024*1024){alert('حجم الملف يتجاوز 10 ميجابايت');return;}
+  fileStore[id]=file;
+  document.getElementById('fn_'+id).textContent=file.name;
+  document.getElementById('fs_'+id).textContent=fmtSize(file.size);
+  document.getElementById('prev_'+id).style.display='flex';
+  document.getElementById('drop_'+id).style.display='none';
+}
+function removeFile(id){
+  delete fileStore[id];
+  document.getElementById('prev_'+id).style.display='none';
+  document.getElementById('drop_'+id).style.display='';
+  document.getElementById('fi_'+id).value='';
+}
+function fmtSize(b){ return b>1048576?(b/1048576).toFixed(1)+' MB':(b/1024).toFixed(0)+' KB'; }
+
+function calcDays(){
+  const a=document.getElementById('f_from').value, b=document.getElementById('f_to').value;
+  if(!a||!b) return;
+  const d=Math.round((new Date(b)-new Date(a))/86400000)+1;
+  if(d>0){ document.getElementById('f_days').value=d+' يوم'; document.getElementById('daysRow').style.display=''; }
+}
+
+function resetForm(){
+  ['f_type','f_from','f_to','f_reason'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('legalCheck').checked=false;
+  document.getElementById('submitBtn').disabled=true;
+  document.getElementById('daysRow').style.display='none';
+  document.getElementById('attachSection').style.display='none';
+  document.getElementById('typeDesc').style.display='none';
+  document.getElementById('submitErr').style.display='none';
+  fileStore={};
+}
+
+async function submitLeave(){
+  const type=document.getElementById('f_type').value;
+  const dateFrom=document.getElementById('f_from').value;
+  const dateTo=document.getElementById('f_to').value;
+  const reason=document.getElementById('f_reason').value.trim();
+  const errBox=document.getElementById('submitErr');
+  errBox.style.display='none';
+
+  if(!type||!dateFrom||!dateTo||!reason){
+    document.getElementById('submitErrMsg').textContent='يرجى ملء جميع الحقول الإلزامية';
+    errBox.style.display='flex'; return;
+  }
+  if(new Date(dateTo)<new Date(dateFrom)){
+    document.getElementById('submitErrMsg').textContent='تاريخ الانتهاء يجب أن يكون بعد تاريخ البداية';
+    errBox.style.display='flex'; return;
+  }
+  const cfg=LEAVE_TYPES[type];
+  const missing=cfg.attachments.filter(a=>a.req&&!fileStore[a.id]);
+  if(missing.length){
+    document.getElementById('submitErrMsg').textContent='يرجى رفع المرفقات الإلزامية: '+missing.map(a=>a.label).join(' | ');
+    errBox.style.display='flex'; return;
+  }
+
+  showOv('جاري رفع المرفقات...');
+  document.getElementById('submitBtn').disabled=true;
+
+  const attachLinks={};
+  for(const [id,file] of Object.entries(fileStore)){
+    // REAL: const b64=await toB64(file); const res=await callScript({action:'uploadFile',name:file.name,base64:b64,mimeType:file.type,folderId:CFG.DRIVE_FOLDER}); attachLinks[id]=res.url;
+    attachLinks[id]='https://drive.google.com/demo_'+id; // demo
+  }
+
+  const days=Math.round((new Date(dateTo)-new Date(dateFrom))/86400000)+1;
+  const refId='SL-'+new Date().getFullYear()+'-'+String(REQUESTS.length+1).padStart(3,'0');
+  const req={
+    id:refId, nid:currentUser.nid, memberName:currentUser.name,
+    dept:currentUser.dept, rank:currentUser.rank,
+    leaveType:type, leaveLabel:cfg.label,
+    dateFrom, dateTo, days, reason,
+    status:'pending_dept',
+    submittedAt:new Date().toISOString().split('T')[0],
+    attachments:attachLinks, notes:''
+  };
+  // REAL: await callScript({action:'submitLeave', data:JSON.stringify(req)});
+  REQUESTS.unshift(req);
+  hideOv();
+  document.getElementById('refNo').textContent=refId;
+  show('success');
+}
+
+function toB64(file){ return new Promise((res,rej)=>{ const r=new FileReader(); r.onload=()=>res(r.result.split(',')[1]); r.onerror=rej; r.readAsDataURL(file); }); }
+function goHistory(){ show('member'); document.querySelectorAll('#screen-member .tab')[1].click(); }
+
+async function loadHistory(){
+  const cont=document.getElementById('historyContent');
+  cont.innerHTML='<div class="empty"><div class="ico">⏳</div><p>جاري التحميل...</p></div>';
+  try {
+    let mine = [];
+    try {
+      const res=await callScript({action:'getMemberRequests', nid:currentUser.nid});
+      mine=res.success?res.data:DEMO_REQUESTS.filter(r=>r.nid===currentUser.nid);
+    } catch(e){ mine=DEMO_REQUESTS.filter(r=>r.nid===currentUser.nid); }
+    if(!mine.length){ cont.innerHTML='<div class="empty"><div class="ico">📂</div><p>لم تقدم طلبات بعد</p></div>'; return; }
+    cont.innerHTML='<table class="htable"><thead><tr><th>رقم الطلب</th><th>النوع</th><th>من</th><th>إلى</th><th>أيام</th><th>الحالة</th><th>ملاحظات</th></tr></thead><tbody>'
+      +mine.map(r=>`<tr>
+        <td><strong>${r.id}</strong></td>
+        <td>${r.leaveLabel}</td>
+        <td>${r.dateFrom}</td><td>${r.dateTo}</td><td>${r.days}</td>
+        <td>${badge(r.status)}</td>
+        <td>${r.notes?`<div class="notes-box" style="margin:0;padding:8px 12px"><div class="notes-text" style="font-size:12.5px">${r.notes}</div></div>`:'<span style="color:var(--gray);font-size:12px">—</span>'}</td>
+      </tr>`).join('')
+      +'</tbody></table>';
+  } catch(e){ cont.innerHTML='<div class="empty"><div class="ico">⚠️</div><p>تعذر تحميل البيانات</p></div>'; }
+}
+
+// ═══════════════════════════════════════════
+//  DEPT DASHBOARD
+// ═══════════════════════════════════════════
+async function loadDept(){
+  try {
+    const [rP,rD]=await Promise.all([
+      callScript({action:'getRequests',role:'dept',statusFilter:'pending'}),
+      callScript({action:'getRequests',role:'dept',statusFilter:'done'})
+    ]);
+    const p=rP.success?rP.data:[];
+    const d=rD.success?rD.data:[];
+    document.getElementById('dPC').textContent=p.length;
+    renderList('dPL',p,'dept');
+    renderList('dDL',d,'done');
+  } catch(e){ console.error(e); }
+}
+function dTab(t,btn){
+  ['p','d'].forEach(x=>document.getElementById('dt-'+x).style.display=x===t?'':'none');
+  document.querySelectorAll('#screen-dept .tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+//  HR DASHBOARD
+// ═══════════════════════════════════════════
+async function loadHR(){
+  try {
+    const [rP,rD]=await Promise.all([
+      callScript({action:'getRequests',role:'hr',statusFilter:'pending'}),
+      callScript({action:'getRequests',role:'hr',statusFilter:'done'})
+    ]);
+    const p=rP.success?rP.data:[];
+    const d=rD.success?rD.data:[];
+    document.getElementById('hPC').textContent=p.length;
+    renderList('hPL',p,'hr');
+    renderList('hDL',d,'done');
+  } catch(e){ console.error(e); }
+}
+function hTab(t,btn){
+  ['p','d'].forEach(x=>document.getElementById('ht-'+x).style.display=x===t?'':'none');
+  document.querySelectorAll('#screen-hr .tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+//  COLLEGE DASHBOARD
+// ═══════════════════════════════════════════
+async function loadCollege(){
+  try {
+    const [rP,rD]=await Promise.all([
+      callScript({action:'getRequests',role:'college',statusFilter:'pending'}),
+      callScript({action:'getRequests',role:'college',statusFilter:'done'})
+    ]);
+    const p=rP.success?rP.data:[];
+    const d=rD.success?rD.data:[];
+    document.getElementById('cPC').textContent=p.length;
+    renderList('cPL',p,'college');
+    renderList('cDL',d,'done');
+  } catch(e){ console.error(e); }
+}
+function cTab(t,btn){
+  ['p','d'].forEach(x=>document.getElementById('ct-'+x).style.display=x===t?'':'none');
+  document.querySelectorAll('#screen-college .tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ═══════════════════════════════════════════
+//  RENDER CARDS
+// ═══════════════════════════════════════════
+function renderList(cid,reqs,mode){
+  const cont=document.getElementById(cid);
+  if(!reqs.length){ cont.innerHTML='<div class="empty"><div class="ico">🎉</div><p>لا توجد طلبات</p></div>'; return; }
+  cont.innerHTML=reqs.map(r=>`
+    <div class="req-card">
+      <div class="req-head">
+        <div>
+          <div class="req-name">${r.memberName}</div>
+          <div class="req-meta">📌 ${r.dept} — ${r.rank} &nbsp;|&nbsp; 📅 تقديم: ${r.submittedAt}</div>
+          <div class="req-meta">🏷️ <strong>${r.leaveLabel}</strong> &nbsp;|&nbsp; 📆 ${r.dateFrom} ← ${r.dateTo} &nbsp;|&nbsp; ⏱️ ${r.days} يوم</div>
+        </div>
+        ${badge(r.status)}
+      </div>
+      <div class="req-reason">💬 ${r.reason}</div>
+
+      ${Object.keys(r.attachments||{}).length?`<div class="attach-row">${Object.entries(r.attachments).map(([k,url])=>`<a class="attach-link" href="${url}" target="_blank">📎 ${k}</a>`).join('')}</div>`:''}
+
+      ${r.deptNote?`<div class="req-meta" style="margin-top:8px">✔️ <strong>رئيس القسم:</strong> ${r.deptNote}</div>`:''}
+      ${r.hrNote?`<div class="req-meta">📋 <strong>الموارد البشرية:</strong> ${r.hrNote}</div>`:''}
+      ${r.collegeNote?`<div class="req-meta">🎓 <strong>العميد:</strong> ${r.collegeNote}</div>`:''}
+      ${r.notes?`<div class="notes-box"><div class="notes-title">💬 ملاحظات للعضو</div><div class="notes-text">${r.notes}</div></div>`:''}
+
+      ${mode==='dept'?`
+        <textarea class="note-input" id="note_${r.id}" placeholder="ملاحظات / طلبات إضافية للعضو (اختياري — ستظهر له مباشرة)...">${r.notes||''}</textarea>
+        <div class="req-actions">
+          <button class="btn btn-green btn-sm" onclick="decide('${r.id}','dept','approved')">✅ موافقة وإحالة للموارد البشرية</button>
+          <button class="btn btn-red btn-sm"   onclick="decide('${r.id}','dept','rejected')">❌ رفض</button>
+        </div>`:''}
+
+      ${mode==='hr'?`
+        <textarea class="note-input" id="note_${r.id}" placeholder="ملاحظات للعضو أو للعميد (اختياري — ستظهر للعضو مباشرة)...">${r.notes||''}</textarea>
+        <div class="req-actions">
+          <button class="btn btn-green btn-sm" onclick="decide('${r.id}','hr','approved')">✅ موافقة وإحالة للعميد</button>
+          <button class="btn btn-red btn-sm"   onclick="decide('${r.id}','hr','rejected')">❌ رفض</button>
+        </div>`:''}
+
+      ${mode==='college'?`
+        <textarea class="note-input" id="note_${r.id}" placeholder="ملاحظات العميد (اختياري — ستظهر للعضو مباشرة)...">${r.notes||''}</textarea>
+        <div class="req-actions">
+          <button class="btn btn-green btn-sm" onclick="decide('${r.id}','college','approved')">✅ اعتماد نهائي</button>
+          <button class="btn btn-red btn-sm"   onclick="decide('${r.id}','college','rejected')">❌ رفض</button>
+        </div>`:''}
+    </div>`).join('');
+}
+
+function decide(id,role,dec){
+  const noteEl=document.getElementById('note_'+id);
+  const note=noteEl?noteEl.value.trim():'';
+  const req=REQUESTS.find(r=>r.id===id);
+  if(!req) return;
+
+  // save notes to member-visible field
+  if(note) req.notes=note;
+
+  if(role==='dept'){
+    req.deptNote=dec==='approved'?'موافق — تم الإحالة للموارد البشرية':'مرفوض من رئيس القسم';
+    req.status=dec==='approved'?'pending_hr':'rejected';
+    loadDept();
+    alert(dec==='approved'?'✅ تمت الموافقة — الطلب محال للموارد البشرية':'❌ تم رفض الطلب وتبليغ العضو');
+  } else if(role==='hr'){
+    req.hrNote=dec==='approved'?'مراجعة مكتملة — تم الإحالة للعميد':'مرفوض من الموارد البشرية';
+    req.status=dec==='approved'?'pending_college':'rejected';
+    loadHR();
+    alert(dec==='approved'?'✅ تمت المراجعة — الطلب محال للعميد':'❌ تم رفض الطلب');
+  } else if(role==='college'){
+    req.collegeNote=dec==='approved'?'معتمد من العميد':'مرفوض من العميد';
+    req.status=dec;
+    loadCollege();
+    alert(dec==='approved'?'✅ تم الاعتماد النهائي للإجازة':'❌ تم رفض الطلب');
+  }
+  // REAL: callScript({action:'decide', id, role, decision:dec, note})
+}
+
+// ═══════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════
+function badge(s){
+  const m={
+    pending_dept: ['b-pending','⏳ بانتظار رئيس القسم'],
+    pending_hr:   ['b-hr','📋 بانتظار الموارد البشرية'],
+    pending_college:['b-college','🏛️ بانتظار العميد'],
+    approved:     ['b-approved','✅ معتمد'],
+    rejected:     ['b-rejected','❌ مرفوض'],
+  };
+  const [cls,lbl]=m[s]||['b-pending',s];
+  return `<span class="badge ${cls}">${lbl}</span>`;
+}
+function showOv(msg){ document.getElementById('overlayMsg').textContent=msg||'جاري...'; document.getElementById('overlay').classList.add('show'); }
+function hideOv(){ document.getElementById('overlay').classList.remove('show'); }
+async function callScript(params){
+  if(DEMO_MODE) return demoHandler(params);
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => reject(new Error('timeout')), 30000);
+    google.script.run
+      .withSuccessHandler(data => { clearTimeout(timeout); resolve(data); })
+      .withFailureHandler(err  => { clearTimeout(timeout); reject(err); })
+      .processRequest(JSON.stringify(params));
+  });
+}
+
+function demoHandler(p){
+  if(p.action==='getMember'){
+    const m=DEMO_MEMBERS[p.nid];
+    return m ? {success:true,data:{nid:p.nid,...m}} : {success:false,message:'الرقم القومي غير موجود'};
+  }
+  if(p.action==='getMemberRequests'){
+    return {success:true, data:DEMO_REQUESTS.filter(r=>r.nid===p.nid)};
+  }
+  if(p.action==='getRequests'){
+    const statusMap={dept:'pending_dept',hr:'pending_hr',college:'pending_college'};
+    const target=statusMap[p.role];
+    const data=p.statusFilter==='pending'
+      ? DEMO_REQUESTS.filter(r=>r.status===target)
+      : DEMO_REQUESTS.filter(r=>r.status!==target);
+    return {success:true, data};
+  }
+  if(p.action==='submitLeave'){
+    const d=typeof p.data==='string'?JSON.parse(p.data):p;
+    const refId='SL-'+new Date().getFullYear()+'-'+String(DEMO_REQUESTS.length+1).padStart(3,'0');
+    DEMO_REQUESTS.unshift({...d,id:refId,status:'pending_dept',notes:''});
+    return {success:true, refId};
+  }
+  if(p.action==='decide'){
+    const r=DEMO_REQUESTS.find(x=>x.id===p.id);
+    if(!r) return {success:false,message:'الطلب غير موجود'};
+    if(p.note) r.notes=p.note;
+    if(p.role==='dept'){   r.deptNote=p.decision==='approved'?'موافق':'مرفوض'; r.status=p.decision==='approved'?'pending_hr':'rejected'; }
+    else if(p.role==='hr'){r.hrNote=p.decision==='approved'?'مراجعة مكتملة':'مرفوض'; r.status=p.decision==='approved'?'pending_college':'rejected'; }
+    else if(p.role==='college'){ r.collegeNote=p.decision==='approved'?'معتمد':'مرفوض'; r.status=p.decision; }
+    return {success:true};
+  }
+  if(p.action==='uploadFile') return {success:true, url:'#demo_file'};
+  return {success:false,message:'غير معروف'};
+}
+</script>
+</body>
+</html>
